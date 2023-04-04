@@ -1,6 +1,7 @@
 package ru.hse.android.lesson3;
 
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
@@ -17,17 +18,24 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppListViewHolder> {
-    private List<PackageInfo> dataSet;
+    private final List<PackageInfo> dataSet;
 
-    public AppListAdapter(List<PackageInfo> packages) {
+    public interface OnElementClickedListener {
+        void onClick(@NonNull PackageInfo packageInfo);
+    }
+
+    private OnElementClickedListener listener;
+
+    public AppListAdapter(List<PackageInfo> packages, @NonNull Context context) {
         dataSet = packages;
+        listener = (OnElementClickedListener) context;
     }
 
     @NonNull
     @Override
     public AppListViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        final View view = LayoutInflater.from(parent.getContext())
-            .inflate(R.layout.fragment_package_info, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+            .inflate(R.layout.fragment_app_list_element, parent, false);
         return new AppListViewHolder(view);
     }
 
@@ -35,7 +43,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppListV
     public void onBindViewHolder(@NonNull AppListAdapter.AppListViewHolder holder, int position) {
         if (position < dataSet.size())
         {
-            holder.apply(dataSet.get(position));
+            holder.apply(dataSet.get(position), listener);
         }
     }
 
@@ -44,25 +52,27 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.AppListV
         return dataSet.size();
     }
 
-    public class AppListViewHolder extends RecyclerView.ViewHolder {
-        private View rootView;
+    public static class AppListViewHolder extends RecyclerView.ViewHolder {
+        private final View rootView;
+
         public AppListViewHolder(@NonNull View itemView) {
             super(itemView);
             rootView = itemView;
         }
 
-        public void apply(PackageInfo packageInfo) {
-            final TextView appPackageTextView = rootView.findViewById(R.id.app_package);
+        public void apply(@NonNull PackageInfo packageInfo, @NonNull OnElementClickedListener listener) {
+            TextView appPackageTextView = rootView.findViewById(R.id.app_package);
             setText(appPackageTextView, packageInfo.packageName);
             try {
-                final ImageView iconImageView = rootView.findViewById(R.id.app_icon);
+                ImageView iconImageView = rootView.findViewById(R.id.app_icon);
                 setIcon(iconImageView, rootView.getContext().getPackageManager()
                         .getApplicationIcon(packageInfo.packageName));
 
-                final TextView appLabelTextView = rootView.findViewById(R.id.app_label);
+                TextView appLabelTextView = rootView.findViewById(R.id.app_label);
                 setText(appLabelTextView, String.valueOf(rootView.getContext().getPackageManager()
                         .getApplicationLabel(packageInfo.applicationInfo)));
 
+                rootView.setOnClickListener(view -> listener.onClick(packageInfo));
             } catch (PackageManager.NameNotFoundException error) {
                 Log.i(AppListViewHolder.class.getSimpleName(), "Can't find icon: " + error.getMessage());
             }

@@ -1,36 +1,44 @@
 package ru.hse.android.lesson3;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.pm.PackageManager;
+import android.content.pm.PackageInfo;
+import android.content.res.Configuration;
 import android.os.Bundle;
-import android.view.View;
 
 import ru.hse.android.lesson3.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity {
-    private ActivityMainBinding binding;
-    private RecyclerView.LayoutManager layoutManager;
-    private RecyclerView.Adapter adapter;
-
+public class MainActivity extends AppCompatActivity implements AppListAdapter.OnElementClickedListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        final View view = binding.getRoot();
-        setContentView(view);
 
-        // Use this setting to improve performance if you know that changes
-        // in content do not change the layout size of the RecyclerView
-        binding.appList.setHasFixedSize(true);
+        ActivityMainBinding binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+    }
 
-        layoutManager = new LinearLayoutManager(this);
-        binding.appList.setLayoutManager(layoutManager);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getSupportFragmentManager().popBackStack();
+    }
 
-        adapter = new AppListAdapter(getPackageManager().getInstalledPackages(PackageManager.GET_META_DATA));
-        binding.appList.setAdapter(adapter);
+    private void addFragment(@NonNull PackageInfo packageInfo) {
+        int target_view = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE
+                ? R.id.app_details_fragment_container
+                : R.id.menu_fragment;
+        AppDetailsFragment appDetailsFragment = new AppDetailsFragment(packageInfo);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(target_view, appDetailsFragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    @Override
+    public void onClick(@NonNull PackageInfo packageInfo) {
+        addFragment(packageInfo);
     }
 }
