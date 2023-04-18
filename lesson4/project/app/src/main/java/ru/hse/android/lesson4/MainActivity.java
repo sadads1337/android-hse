@@ -1,14 +1,14 @@
 package ru.hse.android.lesson4;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkInfo;
 import androidx.work.WorkManager;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -29,7 +29,12 @@ public class MainActivity extends AppCompatActivity {
 
         Button button = findViewById(R.id.work_button);
         button.setOnClickListener(view -> {
-            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(MyWorker.class).build();
+            Constraints constraints = new Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build();
+            OneTimeWorkRequest request = new OneTimeWorkRequest.Builder(MyWorker.class)
+                    .setConstraints(constraints)
+                    .build();
             workId = request.getId();
 
             WorkManager.getInstance(this).enqueue(request);
